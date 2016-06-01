@@ -243,8 +243,8 @@ def recognize():
     flag=manager.list([0,0,0,0,0,0])
            
     keypoints_database = pickle.load( open( "keypoints_database.p", "rb" ) )
-    #cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture('{}'.format(fileurl))
+    cap = cv2.VideoCapture(0)
+    #cap = cv2.VideoCapture('{}'.format(fileurl))
     
     #params (came only): width; height    
     cap.set(3,352)
@@ -304,7 +304,7 @@ def recognize():
 
               
         if flag[5]==1:
-            cv2.putText(frame1,'Krivi smjer!',(10,120), font, 1, (200,255,155), 1, cv2.LINE_AA)
+            cv2.putText(frame1,'wrongdir!',(10,120), font, 1, (200,255,155), 1, cv2.LINE_AA)
             cv2.imshow('output',frame1)
             
         cv2.imshow('output',frame1)
