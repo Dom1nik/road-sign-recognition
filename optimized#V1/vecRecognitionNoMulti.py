@@ -135,8 +135,8 @@ def recognize():
     keypoints_database = pickle.load( open( "keypoints_database.p", "rb" ) )
     cap=cv2.VideoCapture(0)
     #cap = cv2.VideoCapture('{}'.format(fileurl))
-    cap.set(3,780)
-    cap.set(4,420)
+    cap.set(3,352)
+    cap.set(4,240)
     
     flag=[0,0,0,0,0,0]
     

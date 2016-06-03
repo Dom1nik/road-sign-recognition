@@ -16,7 +16,9 @@ ADDITIONAL:
 +multiprocessing - each process takes one frame (total 4) and applies model detection (multiprocess function: "mprocs" )
 +line 243/244 --> change video input from local file to live cam stream
 +line 249/250 --> change resoolution of came input frame
-"""
+
+PROBLEM:
++ create-kill process loop (resources wasting)
 
 import numpy as np
 import cv2
@@ -240,11 +242,10 @@ def recognize():
     bval=manager.Value('i',[])
     cval=manager.Value('i',[])
     dval=manager.Value('i',[])   
-    flag=manager.list([0,0,0,0,0,0])
            
     keypoints_database = pickle.load( open( "keypoints_database.p", "rb" ) )
-    cap = cv2.VideoCapture(0)
-    #cap = cv2.VideoCapture('{}'.format(fileurl))
+    #cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture('{}'.format(fileurl))
     
     #params (came only): width; height    
     cap.set(3,352)
