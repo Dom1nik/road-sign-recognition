@@ -39,18 +39,10 @@ def printSign(flag):
         #cv2.putText(frame,'noovertaking!',(10,205), font, 1, (200,255,155), 1, cv2.LINE_AA)
         print 'noovertaking'    
                 
-    if flag[1]:
-        #cv2.putText(frame,'60kmh!',(10,180), font, 1, (200,255,155), 1, cv2.LINE_AA)
-        print '60kmh'
-        
     if flag[2]:
         #cv2.putText(frame,'Stop!',(10,165), font, 1, (200,255,155), 1, cv2.LINE_AA)
         print 'stop'     
-        
-    if flag[3]:
-        #cv2.putText(frame,'80kmh!',(10,150), font, 1, (200,255,155), 1, cv2.LINE_AA)
-        print '80kmh'
-        
+  
     if flag[4]:
         #cv2.putText(frame,'triangle!',(10,135), font, 1, (200,255,155), 1, cv2.LINE_AA)
         print 'triangle'
@@ -113,9 +105,7 @@ def recognize():
 
     # load detection file (various files for different views and uses)
     cascade1 = cv2.CascadeClassifier("trained_models/datapretjV2/cascade.xml")
-    cascade2 = cv2.CascadeClassifier("trained_models/data60kmhV3/cascade.xml")
     cascade3 = cv2.CascadeClassifier("trained_models/datastopV2/cascade.xml")
-    cascade4 = cv2.CascadeClassifier("trained_models/data80kmhV3/cascade.xml")
     cascade5 = cv2.CascadeClassifier("trained_models/datatriangleV2/cascade.xml")
     cascade6 = cv2.CascadeClassifier("trained_models/datakrivismjerV2/cascade.xml")    
     
@@ -138,9 +128,7 @@ def recognize():
             
             # detect objects, return as list
             rects1 = cascade1.detectMultiScale(frame,minSize=(30,30))
-            rects2 = cascade2.detectMultiScale(frame,minSize=(30,30))
             rects3 = cascade3.detectMultiScale(frame,minSize=(30,30))
-            rects4 = cascade4.detectMultiScale(frame,minSize=(30,30))
             rects5 = cascade5.detectMultiScale(frame,minSize=(30,30))
             rects6 = cascade6.detectMultiScale(frame,minSize=(30,30))
             
@@ -152,18 +140,8 @@ def recognize():
                     match1=check(detector,descriptor,flann,frame,kp,des,x,y,width,height)
                     if match1>threshold:
                         flag[0]=1
-                        match1=0                        
-                        
-            kp, des = unpickle_keypoints(keypoints_database[2])
-
-            if len(rects2)>0:
-                for x,y, width,height in rects2:
-                    #cv2.rectangle(frame, (x,y), (x+width, y+height), color, strokeWeight)
-                    match2=check(detector,descriptor,flann,frame,kp,des,x,y,width,height)
-                    if match2>threshold:
-                        flag[1]=1
-                        match2=0                        
-
+                        match1=0                       
+                                                 
             kp, des = unpickle_keypoints(keypoints_database[3])           
 
             if len(rects3)>0:
@@ -173,17 +151,7 @@ def recognize():
                     if match3>threshold:
                         flag[2]=1
                         match3=0                        
-
-            kp, des = unpickle_keypoints(keypoints_database[5])        
-
-            if len(rects4)>0:
-                for x,y, width,height in rects4:
-                    #cv2.rectangle(frame, (x,y), (x+width, y+height), color, strokeWeight)
-                    match4=check(detector,descriptor,flann,frame,kp,des,x,y,width,height)
-                    if match4>threshold:
-                        flag[3]=1                               
-                        match4=0                        
-
+                          
             kp, des = unpickle_keypoints(keypoints_database[4])        
 
             if len(rects5)>0:
@@ -204,6 +172,7 @@ def recognize():
                     if match6>threshold:
                         flag[5]=1
                         match6=0                        
+            
             
             printSign(flag)
             
