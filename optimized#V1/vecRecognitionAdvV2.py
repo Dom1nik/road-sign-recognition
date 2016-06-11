@@ -30,7 +30,7 @@ import Tkinter
 from tkFileDialog import askopenfilename
 from multiprocessing import Manager, Pool
 import cPickle as pickle
-#import time
+import time
  
 # rectangle color and stroke
 color = (0,0,255)       # reverse of RGB (B,G,R) - weird
@@ -40,7 +40,7 @@ threshold=30
 POISON_PILL = "STOP"
 
 root = Tkinter.Tk()
-fileurl=''
+filename=''
 
 #used for loading of template keypoints and descriptors file
 def unpickle_keypoints(array):
@@ -53,25 +53,53 @@ def unpickle_keypoints(array):
         keypoints.append(temp_feature)
         descriptors.append(temp_descriptor)
     return keypoints, np.array(descriptors)
+
+
+def printSign(flag):    
+    if flag[0]==1:
+        #cv2.putText(frame1,'noovertaking!',(10,205), font, 1, (200,255,155), 1)
+        print "noovertaking"
+        flag[0]=0
+
+    if flag[1]==1:
+        #cv2.putText(frame1,'60kmh!',(10,180), font, 1, (200,255,155), 1)
+        print "60kmh"
+        flag[1]=0
+        
+    if flag[2]==1:
+        #cv2.putText(frame1,'Stop!',(10,165), font, 1, (200,255,155), 1)
+        print "stop"
+        flag[2]=0
+
+    if flag[3]==1:
+        #cv2.putText(frame1,'80kmh!',(10,150), font, 1, (200,255,155), 1)
+        print "80kmh"
+        flag[3]=0
+   
+    if flag[4]==1:
+        #cv2.putText(frame1,'triangle!',(10,135), font, 1, (200,255,155), 1)
+        print "triangle"
+        flag[4]=0
     
+    if flag[5]==1:
+        #cv2.putText(frame1,'wrongdir!',(10,120), font, 1, (200,255,155), 1)
+        print "wrongdir"
+        flag[5]=0
     
 #function called for multicore processing (called from function recognize)
 def nProcs(frame,keypoints_database,threshold,flag):
 
     while True:
         # block until something is placed on the queue
-        new_value = frame.get() 
+        img = frame.get() 
 
         # check to see if we just got the poison pill
-        if new_value == POISON_PILL:
+        if img == POISON_PILL:
                 break
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
         
-        # load an image to search for signs
-        img = new_value
-
         # each sign has its own trained model
         cascade1 = cv2.CascadeClassifier("trained_models/datapretjV2/cascade.xml")
         cascade2 = cv2.CascadeClassifier("trained_models/data60kmhV3/cascade.xml")
@@ -88,81 +116,69 @@ def nProcs(frame,keypoints_database,threshold,flag):
         rects5 = cascade5.detectMultiScale(img,minSize=(30,30))
         rects6 = cascade6.detectMultiScale(img,minSize=(30,30))
            
-        kp1, des1 = unpickle_keypoints(keypoints_database[1])
+        kp, des = unpickle_keypoints(keypoints_database[1])
         
         if len(rects1)>0:
-            #znak zabrane pretjecanja
-            #template="znakcina.png"
             for x,y, width,height in rects1:
                 #cv2.rectangle(img, (x,y), (x+width, y+height), color, strokeWeight)
-                match1=check(img,kp1,des1,x,y,width,height)              
+                match1=check(img,kp,des,x,y,width,height)              
                  
                 if match1>threshold:
                     flag[0]=1
                     
-        kp2, des2 = unpickle_keypoints(keypoints_database[2])
+        kp, des = unpickle_keypoints(keypoints_database[2])
               
         if len(rects2)>0:
-            #znak 60km/h
-            #template="111.png"
             for x,y, width,height in rects2:
                 #cv2.rectangle(img, (x,y), (x+width, y+height), color, strokeWeight)
-                match2=check(img,kp2,des2,x,y,width,height)                  
+                match2=check(img,kp,des,x,y,width,height)                  
                 
                 if match2>threshold:
                     flag[1]=1 
                     
-        kp3, des3 = unpickle_keypoints(keypoints_database[3])           
+        kp, des = unpickle_keypoints(keypoints_database[3])           
                     
         if len(rects3)>0:
-            #znak stop
-            #template="stop-znak.png"
             for x,y, width,height in rects3:
                 #cv2.rectangle(img, (x,y), (x+width, y+height), color, strokeWeight)
-                match3=check(img,kp3,des3,x,y,width,height)
-                
+                match3=check(img,kp,des,x,y,width,height)
+    
                 if match3>threshold:                                
                     flag[2]=1     
                     
-        kp4, des4 = unpickle_keypoints(keypoints_database[5])        
+        kp, des = unpickle_keypoints(keypoints_database[5])        
                     
         if len(rects4)>0:
-            #znak 80km/h
-            #template="2222.png"
             for x,y, width,height in rects4:
                 #cv2.rectangle(img, (x,y), (x+width, y+height), color, strokeWeight)
-                match4=check(img,kp4,des4,x,y,width,height)                 
+                match4=check(img,kp,des,x,y,width,height)                 
                
                 if match4>threshold:
                     flag[3]=1   
                     
-        kp5, des5 = unpickle_keypoints(keypoints_database[4])        
+        kp, des = unpickle_keypoints(keypoints_database[4])        
                             
         if len(rects5)>0:
-            #znak trokut (izricita naredba)
-            #template="triangle.png"
             for x,y, width,height in rects5:
                 #cv2.rectangle(img, (x,y), (x+width, y+height), color, strokeWeight)
-                match5=check(img,kp5,des5,x,y,width,height)                  
+                match5=check(img,kp,des,x,y,width,height)                  
                
                 if match5>threshold:
                     flag[4]=1       
                     
-        kp6, des6 = unpickle_keypoints(keypoints_database[0])                   
+        kp, des = unpickle_keypoints(keypoints_database[0])                   
                     
         if len(rects6)>0:
-            #znak nedozvoljenog smjera
-            #template="stop1.png"
             for x,y, width,height in rects6:
                 #cv2.rectangle(img, (x,y), (x+width, y+height), color, strokeWeight)
-                match6=check(img,kp6,des6,x,y,width,height)
+                match6=check(img,kp,des,x,y,width,height)
                 
                 if match6>threshold:
                     flag[5]=1  
                     
                     
 #function for surf and flann calculations (called from function nProcs)
-def check(img,kp,des,x,y,height,width):
+def check(img,kp1,des1,x,y,height,width):
     cnt=0    
     yheight=y+height
     xwidth=x+width
@@ -171,12 +187,13 @@ def check(img,kp,des,x,y,height,width):
     cropImg = img[y:yheight, x:xwidth]
                                      
     # Initiate SIFT detector
-    surf = cv2.xfeatures2d.SURF_create()  
-    
-    # find the keypoints and descriptors with SURF
-    kp1=kp
-    des1=des    
-    kp2, des2 = surf.detectAndCompute(cropImg,None)
+    detector = cv2.FeatureDetector_create("SURF")
+    descriptor = cv2.DescriptorExtractor_create("SURF")
+        
+        
+    # find the keypoints and descriptors with SURF        
+    kp2 = detector.detect(cropImg)
+    kp2, des2 = descriptor.compute(cropImg, kp2)
   
     # FLANN parameters
     FLANN_INDEX_KDTREE = 0
@@ -200,11 +217,9 @@ def check(img,kp,des,x,y,height,width):
 
 #tkinter base function
 def askopenfile():
-    global fileurl
+    global filename
     Tkinter.Tk().withdraw() 
     filename = askopenfilename()
-    fileurl=filename
-
 
 #function for detection of 42 signs using one common trained model for all signs (no multiprocessing)
 def detect():
@@ -212,8 +227,8 @@ def detect():
     color = (0,0,255)       # reverse of RGB (B,G,R) - weird
     strokeWeight = 1        # thickness of outline
     
-    #cap = cv2.VideoCapture('{}'.format(fileurl))    
-    cap=cv2.VideoCapture(0)
+    cap = cv2.VideoCapture('{}'.format(filename))    
+    #cap=cv2.VideoCapture(0)
     
     while(cap.isOpened()):
             ret, frame = cap.read()
@@ -224,7 +239,6 @@ def detect():
     
             # load an image to search for faces
             img = frame
-            cv2.imshow('frame',img)
     
             # load detection file (various files for different views and uses)
             
@@ -236,6 +250,9 @@ def detect():
             # get a list of rectangles
             for x,y, width,height in rects1:
                 cv2.rectangle(img, (x,y), (x+width, y+height), color, strokeWeight)
+                
+            cv2.imshow('frame',img)
+
         
     cap.release()
     cv2.destroyAllWindows()
@@ -243,13 +260,13 @@ def detect():
 #function for detection and recognition of 6 signs using separated model for each sign (multiprocessing)
 def recognize():
     
-    font = cv2.FONT_HERSHEY_SIMPLEX 
+    #font = cv2.FONT_HERSHEY_SIMPLEX 
     manager=Manager()  
     flag=manager.list([0,0,0,0,0,0])
            
     keypoints_database = pickle.load( open( "keypoints_database.p", "rb" ) )
-    cap = cv2.VideoCapture(0)
-    #cap = cv2.VideoCapture('{}'.format(fileurl))
+    #cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture('{}'.format(filename))
     
     #params (came only): width; height    
     cap.set(3, 352)
@@ -286,39 +303,16 @@ def recognize():
          
         #nprocs=4
         f1.put(frame1)
-        #time.sleep(0.050) 
+        time.sleep(0.050) 
         f2.put(frame2)
-        #time.sleep(0.050)            
+        time.sleep(0.050)            
         f3.put(frame3)
-        #time.sleep(0.050) 
+        time.sleep(0.050) 
         f4.put(frame4)
-        #time.sleep(0.050) 
+        time.sleep(0.050) 
         
-        
-        if flag[0]==1:
-            cv2.putText(frame1,'noovertaking!',(10,205), font, 1, (200,255,155), 1, cv2.LINE_AA)
-            flag[0]=0
-
-        if flag[1]==1:
-            cv2.putText(frame1,'60kmh!',(10,180), font, 1, (200,255,155), 1, cv2.LINE_AA)
-            flag[1]=0
-            
-        if flag[2]==1:
-            cv2.putText(frame1,'Stop!',(10,165), font, 1, (200,255,155), 1, cv2.LINE_AA)
-            flag[2]=0
-
-        if flag[3]==1:
-            cv2.putText(frame1,'80kmh!',(10,150), font, 1, (200,255,155), 1, cv2.LINE_AA)
-            flag[3]=0
-       
-        if flag[4]==1:
-            cv2.putText(frame1,'triangle!',(10,135), font, 1, (200,255,155), 1, cv2.LINE_AA)
-            flag[4]=0
-        
-        if flag[5]==1:
-            cv2.putText(frame1,'wrongdir!',(10,120), font, 1, (200,255,155), 1, cv2.LINE_AA)
-            flag[5]=0
-        
+        printSign(flag)
+ 
         cv2.imshow('output',frame1)
    
     f1.put(POISON_PILL)

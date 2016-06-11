@@ -32,28 +32,7 @@ def unpickle_keypoints(array):
         keypoints.append(temp_feature)
         descriptors.append(temp_descriptor)
     return keypoints, np.array(descriptors)
-   
-   
-def printSign(flag):
-    if flag[0]:
-        #cv2.putText(frame,'noovertaking!',(10,205), font, 1, (200,255,155), 1, cv2.LINE_AA)
-        print 'noovertaking'    
-                
-    if flag[2]:
-        #cv2.putText(frame,'Stop!',(10,165), font, 1, (200,255,155), 1, cv2.LINE_AA)
-        print 'stop'     
-  
-    if flag[4]:
-        #cv2.putText(frame,'triangle!',(10,135), font, 1, (200,255,155), 1, cv2.LINE_AA)
-        print 'triangle'
-
-    if flag[5]:
-        #cv2.putText(frame,'wrongdir!',(10,120), font, 1, (200,255,155), 1, cv2.LINE_AA)
-        print 'wrongdir'
-    
-    
-   
-    
+     
 def check(detector,descriptor,flann,img,kp1,des1,x,y,height,width):
     cnt=0    
     yheight=y+height
@@ -88,10 +67,47 @@ def askopenfile():
     filename = askopenfilename()
     
 
+#function for detection of 42 signs using one common trained model for all signs (no multiprocessing)
+def detect():
+    # rectangle color and stroke
+    color = (0,0,255)       # reverse of RGB (B,G,R) - weird
+    strokeWeight = 1        # thickness of outline
+    
+    cap = cv2.VideoCapture('{}'.format(filename))    
+    #cap=cv2.VideoCapture(0)
+    
+    while(cap.isOpened()):
+            ret, frame = cap.read()
+            
+            #if q pressed, break loop, jump to cap release and close all windows / force quit
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+    
+            # load an image to search for faces
+            img = frame
+    
+            # load detection file (various files for different views and uses)
+            
+            cascade1 = cv2.CascadeClassifier("trained_models/dataALL/cascade.xml")
+        
+            # detect objects, return as list
+            rects1 = cascade1.detectMultiScale(img)
+    
+            # get a list of rectangles
+            for x,y, width,height in rects1:
+                cv2.rectangle(img, (x,y), (x+width, y+height), color, strokeWeight)
+                
+            cv2.imshow('frame',img)
+
+        
+    cap.release()
+    cv2.destroyAllWindows()
+
+
 def recognize():
     # set window name
     #windowName = "Object Detection"
-    #font = cv2.FONT_HERSHEY_SIMPLEX 
+    font = cv2.FONT_HERSHEY_SIMPLEX 
     keypoints_database = pickle.load( open( "keypoints_database.p", "rb" ) )
     
     detector = cv2.FeatureDetector_create("SURF")
@@ -109,14 +125,14 @@ def recognize():
     cascade5 = cv2.CascadeClassifier("trained_models/datatriangleV2/cascade.xml")
     cascade6 = cv2.CascadeClassifier("trained_models/datakrivismjerV2/cascade.xml")    
     
-    cap=cv2.VideoCapture(0)
-    #cap = cv2.VideoCapture('{}'.format(fileurl))
+    #cap=cv2.VideoCapture(0)
+    cap = cv2.VideoCapture('{}'.format(filename))
     cap.set(3,320)
     cap.set(4,240)
         
     while(cap.isOpened()):
             ret, frame = cap.read()
-            frame=frame[100:700, 100:500]
+            #frame=frame[100:700, 100:500]
             
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -140,7 +156,9 @@ def recognize():
                     match1=check(detector,descriptor,flann,frame,kp,des,x,y,width,height)
                     if match1>threshold:
                         flag[0]=1
-                        match1=0                       
+                        cv2.putText(frame,'noovertaking!',(10,205), font, 1, (200,255,155), 1)
+                        print 'noovertaking'        
+                        #match1=0                       
                                                  
             kp, des = unpickle_keypoints(keypoints_database[3])           
 
@@ -150,7 +168,9 @@ def recognize():
                     match3=check(detector,descriptor,flann,frame,kp,des,x,y,width,height)
                     if match3>threshold:
                         flag[2]=1
-                        match3=0                        
+                        #cv2.putText(frame,'Stop!',(10,165), font, 1, (200,255,155), 1)
+                        print 'stop'
+                        #match3=0                        
                           
             kp, des = unpickle_keypoints(keypoints_database[4])        
 
@@ -160,7 +180,9 @@ def recognize():
                     match5=check(detector,descriptor,flann,frame,kp,des,x,y,width,height)
                     if match5>threshold:
                         flag[4]=1
-                        match5=0                        
+                        #cv2.putText(frame,'triangle!',(10,135), font, 1, (200,255,155), 1)
+                        print 'triangle'
+                        #match5=0                        
 
             
             kp, des = unpickle_keypoints(keypoints_database[0])                   
@@ -171,11 +193,10 @@ def recognize():
                     match6=check(detector,descriptor,flann,frame,kp,des,x,y,width,height)
                     if match6>threshold:
                         flag[5]=1
-                        match6=0                        
-            
-            
-            printSign(flag)
-            
+                        #cv2.putText(frame,'wrongdir!',(10,120), font, 1, (200,255,155), 1)
+                        print 'wrongdir'
+                        #match6=0                        
+          
             # display! 
             cv2.imshow('frame', frame)
            
@@ -191,11 +212,13 @@ def quitScript():
     root.destroy()
 
 A = Tkinter.Button(root, text ="Browse", command = askopenfile)
+B = Tkinter.Button(root, text ="Detect", command = detect)
 C = Tkinter.Button(root, text ="Recognize", command = recognize)
 D = Tkinter.Button(root, text ="Quit", command = quitScript)
 
 
 A.pack()
+B.pack()
 C.pack()
 D.pack()
 
